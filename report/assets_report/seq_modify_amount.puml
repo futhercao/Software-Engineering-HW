@@ -1,0 +1,41 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Modify_Amount(car_Id, Amount)
+
+actor "用户" as A
+boundary "充电申请界面" as UI
+control "ChargingRequestController" as C
+control "ChargingRequestService" as S
+control "DispatchService" as D
+entity "ChargingRequest" as REQ
+database "RequestRepository" as R
+A -> UI: 修改请求电量
+UI -> C: Modify_Amount(car_Id, Amount)
+C -> S: modify_amount(payload)
+S -> R: active_for_car(car_Id)
+R --> S: request
+alt 仍在等候区且电量合法
+  S -> REQ: amount = Amount  (排队号不变)
+  S -> D: dispatch_waiting(mode)
+  S --> C: Return(1)
+else 已进入充电区
+  S --> C: ValueError(不能修改)
+end
+C --> UI: Return(0/1)
+@enduml

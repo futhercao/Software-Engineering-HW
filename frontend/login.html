@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录 · 智能充电桩调度计费系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="login-body">
+    <main class="login-card">
+      <div class="login-brand">
+        <img src="./assets/station.svg" alt="充电站" />
+        <div>
+          <h1>智能充电站</h1>
+          <p>调度计费系统 · 登录 / 注册</p>
+        </div>
+      </div>
+
+      <div class="role-switch" role="tablist" aria-label="登录角色">
+        <button class="role-btn is-active" data-role="user" type="button">用户登录</button>
+        <button class="role-btn" data-role="admin" type="button">管理员</button>
+        <button class="role-btn" data-role="register" type="button">注册新用户</button>
+      </div>
+
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <!-- 用户登录 / 注册：车辆 ID -->
+        <label class="field" data-for="user">
+          车辆 ID
+          <input id="loginCarId" value="京A-88888" />
+        </label>
+        <!-- 管理员：工号 -->
+        <label class="field hidden" data-for="staff">
+          工号
+          <input id="loginUser" value="" />
+        </label>
+        <!-- 注册专用：用户名 + 电池容量 -->
+        <label class="field hidden" data-for="register">
+          用户名
+          <input id="regUserName" value="" />
+        </label>
+        <label class="field hidden" data-for="register">
+          电池容量（度）
+          <input id="regCapacity" type="number" min="1" max="200" value="60" />
+        </label>
+        <label class="field">
+          密码
+          <input id="loginPwd" type="password" value="123456" />
+        </label>
+        <button class="primary login-submit" id="loginSubmit" type="submit">登 录</button>
+      </form>
+
+      <p class="login-hint" id="loginHint"></p>
+      <p class="login-foot">用户端与管理员端共用本服务，登录后仅进入本角色界面。新顾客请先「注册新用户」。</p>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const HINTS = {
+        user: "演示账户：车辆 ID <b>京A-88888</b> / 密码 <b>123456</b>；新顾客请点「注册新用户」",
+        admin: "管理员工号 <b>admin</b> / 密码 <b>admin123456</b>",
+        register: "填写车辆 ID、用户名、电池容量与密码（≥6 位）完成注册，之后用车辆 ID + 密码登录",
+      };
+      const DEFAULTS = {
+        user: { id: "京A-88888", pwd: "123456" },
+        admin: { id: "admin", pwd: "admin123456" },
+      };
+      let mode = "user";
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+      function showToast(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast.t);
+        showToast.t = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+      function show(selector, on) {
+        document.querySelectorAll(selector).forEach((el) => el.classList.toggle("hidden", !on));
+      }
+
+      // 切换 用户登录 / 管理员登录 / 注册 三种模式，按模式显示对应字段
+      function applyRole(next) {
+        mode = next;
+        document.querySelectorAll(".role-btn").forEach((b) => b.classList.toggle("is-active", b.dataset.role === mode));
+        const isUser = mode === "user";
+        const isAdmin = mode === "admin";
+        const isReg = mode === "register";
+        show('[data-for="user"]', isUser || isReg); // 车辆 ID：用户登录与注册都需要
+        show('[data-for="staff"]', isAdmin); // 工号：仅管理员
+        show('[data-for="register"]', isReg); // 用户名/电池容量：仅注册
+        $("loginHint").innerHTML = HINTS[mode];
+        $("loginSubmit").textContent = isReg ? "注 册" : "登 录";
+        if (isAdmin) {
+          $("loginUser").value = DEFAULTS.admin.id;
+          $("loginPwd").value = DEFAULTS.admin.pwd;
+        } else if (isUser) {
+          $("loginCarId").value = DEFAULTS.user.id;
+          $("loginPwd").value = DEFAULTS.user.pwd;
+        } else {
+          $("loginCarId").value = "";
+          $("regUserName").value = "";
+          $("regCapacity").value = 60;
+          $("loginPwd").value = "";
+        }
+      }
+
+      document.querySelectorAll(".role-btn").forEach((b) => b.addEventListener("click", () => applyRole(b.dataset.role)));
+
+      // 注册用例：createNewAccount(car_Id, userName, car_Capacity) → set_pwd(...)
+      async function doRegister() {
+        const carId = $("loginCarId").value.trim();
+        const userName = $("regUserName").value.trim();
+        const capacity = Number($("regCapacity").value);
+        const password = $("loginPwd").value;
+        let resp = await fetch("/api/accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ carId, userName, capacity }),
+        });
+        let payload = await resp.json();
+        if (!payload.ok) {
+          showToast(payload.error || "创建账号失败");
+          return;
+        }
+        resp = await fetch("/api/accounts/password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ carId, password }),
+        });
+        payload = await resp.json();
+        if (!payload.ok) {
+          showToast(payload.error || "设置密码失败");
+          return;
+        }
+        showToast("注册成功，请用车辆 ID + 密码登录");
+        applyRole("user");
+        $("loginCarId").value = carId;
+        $("loginPwd").value = "";
+      }
+
+      async function doLogin() {
+        const body = { role: mode, password: $("loginPwd").value };
+        if (mode === "user") body.carId = $("loginCarId").value.trim();
+        else body.username = $("loginUser").value.trim();
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const payload = await response.json();
+        if (!payload.ok) {
+          showToast(payload.error || "登录失败");
+          return;
+        }
+        const data = payload.data;
+        sessionStorage.clear();
+        sessionStorage.setItem("role", data.role);
+        if (data.carId) sessionStorage.setItem("carId", data.carId);
+        if (data.userName) sessionStorage.setItem("userName", data.userName);
+        if (data.username) sessionStorage.setItem("username", data.username);
+        location.href = "./index.html";
+      }
+
+      $("loginForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitBtn = event.submitter || $("loginSubmit");
+        if (submitBtn) submitBtn.disabled = true;
+        try {
+          if (mode === "register") await doRegister();
+          else await doLogin();
+        } catch (err) {
+          showToast("无法连接后端服务");
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+
+      applyRole("user");
+    </script>
+  </body>
+</html>

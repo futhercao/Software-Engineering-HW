@@ -1,0 +1,37 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title powerOn(pile_Id)
+
+actor "管理员" as A
+boundary "充电桩管理界面" as UI
+control "PileAdminController" as C
+control "PileService" as S
+control "DispatchService" as D
+entity "ChargingPile" as P
+database "PileRepository" as R
+A -> UI: 启动充电桩
+UI -> C: powerOn(pile_Id)
+C -> S: start_pile(payload)
+S -> R: get(pile_Id)
+R --> S: pile
+S -> P: state = WORKING
+S -> D: dispatch_waiting(mode)
+S --> C: Return(1)
+C --> UI: Return(0/1)
+@enduml

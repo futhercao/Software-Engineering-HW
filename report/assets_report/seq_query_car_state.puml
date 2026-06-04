@@ -1,0 +1,36 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Query_Car_State(car_id)
+
+actor "用户" as A
+boundary "充电申请界面" as UI
+control "ChargingRequestController" as C
+control "ChargingRequestService" as S
+control "QueueService" as Q
+database "RequestRepository" as R
+A -> UI: 查看本车排队状态
+UI -> C: Query_Car_State(car_id)
+C -> S: car_state(car_id)
+S -> R: active_for_car(car_id)
+R --> S: request
+S -> Q: count_before(request)
+Q --> S: 前车数量
+S --> C: Return(car_Number_before_position, car_state, queue_Num, request_time)
+C --> UI: 返回状态
+@enduml

@@ -1,0 +1,70 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_03 / UC_04 查看账单与详单 — 静态类图
+
+package "控制器层" {
+  class BillingController {
+    +Request_Bill(carId, date) : dict
+    +Request_DetailedList(carId, billId) : dict
+    +report(period) : dict
+  }
+}
+package "业务层" {
+  class BillingService {
+    +query_bill(carId, date) : dict
+    +query_details(carId, billId) : dict
+    +create_detail(...) : DetailedList
+    +report(period) : list
+  }
+}
+package "领域层" {
+  class Bill {
+    -billId : str
+    -carId : str
+    -date : str
+    -totalFee : float
+    +add_detail(detail) : void
+  }
+  class DetailedList {
+    -detailId : str
+    -pileId : str
+    -chargeAmount : float
+    -chargeDuration : int
+    -chargeFee : float
+    -serviceFee : float
+    -totalFee : float
+  }
+}
+package "持久化层" {
+  class BillRepository {
+    +query(carId, day) : list
+    +find(billId, carId) : Bill
+  }
+  class DetailedListRepository {
+    +add(detail) : void
+    +query(carId, billId) : list
+  }
+}
+BillingController --> BillingService
+BillingService --> Bill
+Bill --> DetailedList
+BillingService ..> BillRepository
+BillingService ..> DetailedListRepository
+@enduml

@@ -1,0 +1,61 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_01 注册 — 静态类图
+
+package "控制器层" {
+  class AccountController {
+    -account_service : AccountService
+    +createNewAccount(payload) : dict
+    +set_pwd(payload) : dict
+  }
+}
+package "业务层" {
+  class AccountService {
+    -account_repo : AccountRepository
+    +create_account(payload) : dict
+    +set_password(payload) : dict
+    +require_account(car_id) : UserAccount
+  }
+}
+package "领域层" {
+  class UserAccount {
+    -userName : str
+    -active : bool
+    -credential : dict
+    +set_password(pwd) : void
+    +verify(pwd) : bool
+  }
+  class EVCar {
+    -carId : str
+    -capacity : float
+  }
+}
+package "持久化层" {
+  class AccountRepository {
+    +add(account) : void
+    +get(car_id) : UserAccount
+    +exists(car_id) : bool
+  }
+}
+AccountController --> AccountService
+AccountService --> UserAccount
+UserAccount --> EVCar
+AccountService ..> AccountRepository
+@enduml

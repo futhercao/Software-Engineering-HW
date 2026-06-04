@@ -1,0 +1,33 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Query_PileState(pile_Id)
+
+actor "管理员" as A
+boundary "监控界面" as UI
+control "MonitorController" as C
+control "PileMonitorService" as S
+database "PileRepository" as R
+A -> UI: 定时刷新充电桩状态
+UI -> C: Query_PileState(pile_Id)
+C -> S: query_pile_state(pile_Id)
+S -> R: all() / get(pile_Id)
+R --> S: 充电桩集合
+S --> C: Return(workingState, TotalChargeNum, TotalChargeTime, TotalCapacity)
+C --> UI: 刷新所有充电桩状态
+@enduml

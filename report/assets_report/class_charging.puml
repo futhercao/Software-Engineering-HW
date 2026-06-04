@@ -1,0 +1,120 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_02 充电申请与充电过程 — 静态类图
+
+package "控制器层" {
+  class ChargingRequestController {
+    +E_chargingRequest(payload) : dict
+    +Modify_Amount(payload) : dict
+    +Modify_Mode(payload) : dict
+    +Cancel_Request(payload) : dict
+    +Query_Car_State(car_id) : dict
+    +Start_Charging(payload) : dict
+    +Query_Charging_State(car_id) : dict
+    +End_Charging(payload) : dict
+  }
+}
+package "业务层" {
+  class ChargingRequestService {
+    +submit_request(payload) : dict
+    +modify_amount(payload) : dict
+    +modify_mode(payload) : dict
+    +cancel_request(payload) : dict
+    +car_state(car_id) : dict
+    +start_charging(payload) : dict
+    +charging_state(car_id) : dict
+    +end_charging(payload) : dict
+  }
+  class QueueService {
+    +make_ticket(mode) : str
+    +count_before(req) : int
+    +queue_rows() : list
+  }
+  class DispatchService {
+    +best_pile(mode, amount) : ChargingPile
+    +dispatch_waiting(mode) : void
+    +assign_to_best_pile(req) : bool
+  }
+  class ChargingService {
+    +start_charging(req, pile) : dict
+    +end_charging(req) : dict
+    +charging_state(req) : dict
+    +advance(minutes) : void
+  }
+  class PricingService {
+    +calculate_fee(start, end, amount, power) : dict
+  }
+  class BillingService {
+    +create_detail(...) : DetailedList
+  }
+}
+package "领域层" {
+  class ChargingRequest {
+    -carId : str
+    -amount : float
+    -mode : str
+    -ticket : str
+    -state : str
+    -pileId : str
+    +charging_minutes(power) : float
+  }
+  class QueueTicket {
+    -prefix : str
+    -number : int
+    +order : int
+  }
+  class ChargingPile {
+    -id : str
+    -power : float
+    -state : str
+    -queue : list
+    -activeRequestId : str
+    +load() : int
+    +has_slot(len) : bool
+  }
+  class ChargeSession {
+    -start : int
+    -duration : int
+    -remainingMinutes : int
+    +advance(min) : void
+  }
+}
+package "持久化层" {
+  class RequestRepository {
+    +add(req) : void
+    +active_for_car(car_id) : ChargingRequest
+    +waiting(mode) : list
+  }
+}
+ChargingRequestController --> ChargingRequestService
+ChargingRequestService --> ChargingService
+ChargingRequestService --> QueueService
+ChargingRequestService --> DispatchService
+ChargingRequestService --> ChargingRequest
+ChargingService --> ChargeSession
+ChargingService --> ChargingPile
+ChargingService --> PricingService
+ChargingService --> BillingService
+DispatchService --> ChargingPile
+QueueService --> QueueTicket
+ChargingRequest --> QueueTicket
+ChargingRequestService ..> RequestRepository
+DispatchService ..> RequestRepository
+@enduml

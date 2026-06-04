@@ -1,0 +1,38 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Query_Charging_State(car_id)
+
+actor "用户" as A
+boundary "充电控制界面" as UI
+control "ChargingRequestController" as C
+control "ChargingRequestService" as RS
+control "ChargingService" as S
+control "PricingService" as PR
+entity "ChargeSession" as SE
+A -> UI: 查看实时充电状态
+UI -> C: Query_Charging_State(car_id)
+C -> RS: charging_state(car_id)
+RS -> S: charging_state(request)
+S -> SE: 取 start / 已充时长
+S -> PR: calculate_fee(start, now, charged, power)
+PR --> S: {chargeFee, serviceFee, totalFee}
+S --> RS: 实时详单信息
+RS --> C: Return(详单信息: 电量/时长/起止/费用)
+C --> UI: 返回实时详单
+@enduml

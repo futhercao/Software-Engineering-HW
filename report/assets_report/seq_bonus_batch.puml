@@ -1,0 +1,35 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title batchDispatchWhenFull() — 批量调度总时长最短 [Bonus]
+
+actor "管理员" as A
+boundary "调度模拟界面" as UI
+control "FaultDispatchController" as C
+control "DispatchService" as D
+entity "ChargingPile" as P
+A -> UI: 到站车辆填满全部车位，启动批量调度
+UI -> C: batchDispatchWhenFull()
+C -> D: batch_dispatch_when_full()
+D -> D: 校验车辆数 = 充电区+等候区总车位
+D -> D: 收回全部未充电车辆为一组(不分快/慢充)
+D -> D: _greedy_any_mode 使完成总时长最短地分配到任意桩
+D -> P: 分配入队
+D --> C: {dispatched, totalFinishMinutes}
+C --> UI: 展示批量调度结果
+@enduml

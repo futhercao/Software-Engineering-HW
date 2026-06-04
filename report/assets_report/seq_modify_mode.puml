@@ -1,0 +1,41 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Modify_Mode(car_Id, Mode)
+
+actor "用户" as A
+boundary "充电申请界面" as UI
+control "ChargingRequestController" as C
+control "ChargingRequestService" as S
+control "QueueService" as Q
+control "DispatchService" as D
+entity "ChargingRequest" as REQ
+A -> UI: 修改充电模式
+UI -> C: Modify_Mode(car_Id, Mode)
+C -> S: modify_mode(payload)
+alt 仍在等候区
+  S -> Q: make_ticket(Mode)
+  Q --> S: 新排队号
+  S -> REQ: mode=Mode, ticket=新号, createdAt=now (排到该模式队尾)
+  S -> D: dispatch_waiting(Mode)
+  S --> C: Return(1)
+else 已进入充电区
+  S --> C: ValueError(可取消后重排)
+end
+C --> UI: Return(0/1)
+@enduml

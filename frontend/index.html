@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能充电桩调度计费系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="./assets/station.svg" alt="充电站示意图" />
+          <div>
+            <h1>智能充电站</h1>
+            <p>调度计费系统</p>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="主导航">
+          <button class="tab" data-tab="user" type="button"><span aria-hidden="true">⌁</span>用户端</button>
+          <button class="tab" data-tab="mybills" type="button"><span aria-hidden="true">￥</span>我的账单</button>
+          <button class="tab" data-tab="admin" type="button"><span aria-hidden="true">▦</span>管理员</button>
+          <button class="tab" data-tab="dispatch" type="button"><span aria-hidden="true">↻</span>调度模拟</button>
+        </nav>
+        <div class="station-card">
+          <div class="station-map" aria-hidden="true">
+            <div class="zone waiting-zone">
+              <span>等候区</span>
+              <strong id="waitingCount">0</strong>
+            </div>
+            <div class="pile-strip" id="miniPiles"></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <h2 id="viewTitle">用户客户端</h2>
+            <p id="viewSubtitle">提交充电申请、查看队列与控制充电</p>
+          </div>
+          <div class="topbar-right">
+            <div class="clock">
+              <span id="simTime">08:00</span>
+              <input id="tickMinutes" type="number" min="1" max="600" value="15" title="推进分钟数" aria-label="推进分钟数" />
+              <button class="icon-button" id="tickBtn" type="button" title="推进系统时间">推进</button>
+            </div>
+            <div class="session-chip">
+              <span id="sessionLabel">未登录</span>
+              <button class="icon-button" id="logoutBtn" type="button" title="退出登录">退出</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- ================= 用户端（顾客控制面板） ================= -->
+        <section class="view" id="view-user">
+          <section class="panel id-card">
+            <div class="id-card-main">
+              <span class="id-card-label">当前登录车辆</span>
+              <strong id="boundCar">-</strong>
+              <small id="boundUser"></small>
+            </div>
+            <div class="id-card-pills">
+              <span class="status-pill" id="accountState">未注册</span>
+              <span class="status-pill muted" id="requestTicket">未排队</span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>充电申请</h3>
+            </div>
+            <div class="form-grid">
+              <label>
+                充电模式
+                <select id="requestMode">
+                  <option value="FAST">快充 F</option>
+                  <option value="TRICKLE">慢充 T</option>
+                </select>
+              </label>
+              <label>
+                请求电量
+                <input id="requestAmount" type="number" min="1" max="100" value="30" />
+              </label>
+            </div>
+            <div class="segmented" role="group" aria-label="申请操作">
+              <button class="primary" id="submitRequestBtn" type="button">提交申请</button>
+              <button id="modifyAmountBtn" type="button">改电量</button>
+              <button id="modifyModeBtn" type="button">改模式</button>
+              <button class="danger" id="cancelRequestBtn" type="button">取消</button>
+            </div>
+          </section>
+
+          <div class="grid three">
+            <section class="panel metric">
+              <span>车辆状态</span>
+              <strong id="carStateText">未入站</strong>
+            </section>
+            <section class="panel metric">
+              <span>前车数量</span>
+              <strong id="beforeCount">0</strong>
+            </section>
+            <section class="panel metric">
+              <span>预计等待</span>
+              <strong id="waitEstimate">0 分钟</strong>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>充电控制</h3>
+              <div class="actions slim">
+                <button id="queryStateBtn" type="button">查询队列</button>
+                <button id="startChargeBtn" type="button">开始充电</button>
+                <button class="danger" id="endChargeBtn" type="button">结束充电</button>
+              </div>
+            </div>
+            <div class="charge-board">
+              <div>
+                <span>当前充电桩</span>
+                <strong id="currentPile">-</strong>
+              </div>
+              <div>
+                <span>已充电量</span>
+                <strong id="chargedAmount">0.0 度</strong>
+              </div>
+              <div>
+                <span>充电时长</span>
+                <strong id="chargeDuration">0 分钟</strong>
+              </div>
+              <div>
+                <span>实时费用</span>
+                <strong id="liveFee">￥0.00</strong>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ================= 用户：我的账单 / 详单（仅本车，对应 Request_Bill / Request_DetailedList） ================= -->
+        <section class="view" id="view-mybills">
+          <section class="panel id-card">
+            <div class="id-card-main">
+              <span class="id-card-label">当前登录车辆</span>
+              <strong id="billBoundCar">-</strong>
+            </div>
+            <div class="actions slim">
+              <input id="billDate" type="date" />
+              <button id="queryBillBtn" type="button">查询账单</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>账单汇总</h3>
+            </div>
+            <div class="bill-summary" id="billSummary"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>充电详单</h3>
+              <div class="actions slim">
+                <input id="detailBillId" placeholder="账单编号，可为空" />
+                <button id="queryDetailBtn" type="button">查询详单</button>
+                <span class="status-pill muted" id="detailCount">0 条</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>详单编号</th>
+                    <th>账单编号</th>
+                    <th>车辆</th>
+                    <th>充电桩</th>
+                    <th>电量</th>
+                    <th>时长</th>
+                    <th>启动时间</th>
+                    <th>停止时间</th>
+                    <th>充电费</th>
+                    <th>服务费</th>
+                    <th>费用</th>
+                    <th>生成时间</th>
+                  </tr>
+                </thead>
+                <tbody id="detailRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- ================= 管理员端（系统监控与设备） ================= -->
+        <section class="view" id="view-admin">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>充电桩运行状态</h3>
+              <div class="actions slim">
+                <button id="refreshAdminBtn" type="button">刷新状态</button>
+                <button id="setRuleBtn" type="button">设置计费</button>
+              </div>
+            </div>
+            <div class="pile-grid" id="pileGrid"></div>
+          </div>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <h3>队列车辆</h3>
+                <span class="status-pill muted" id="queueSummary">0 辆等待</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>队列</th>
+                      <th>车辆</th>
+                      <th>电池容量</th>
+                      <th>请求电量</th>
+                      <th>排队时长</th>
+                    </tr>
+                  </thead>
+                  <tbody id="queueRows"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h3>故障处理</h3>
+                <span class="status-pill warn" id="faultState">无故障</span>
+              </div>
+              <div class="form-grid">
+                <label>
+                  故障充电桩
+                  <select id="faultPile"></select>
+                </label>
+                <label>
+                  调度策略
+                  <select id="faultStrategy">
+                    <option value="PRIORITY">优先级调度</option>
+                    <option value="TIME_ORDER">时间顺序调度</option>
+                  </select>
+                </label>
+              </div>
+              <div class="actions">
+                <button class="danger" id="faultBtn" type="button">标记故障</button>
+                <button id="recoverBtn" type="button">故障恢复</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>运营报表</h3>
+              <div class="actions slim">
+                <select id="reportPeriod">
+                  <option value="day">日</option>
+                  <option value="week">周</option>
+                  <option value="month">月</option>
+                </select>
+                <button id="refreshReportBtn" type="button">刷新报表</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>充电桩</th>
+                    <th>次数</th>
+                    <th>时长</th>
+                    <th>电量</th>
+                    <th>充电费</th>
+                    <th>服务费</th>
+                    <th>总费用</th>
+                  </tr>
+                </thead>
+                <tbody id="reportRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- ================= 调度模拟（管理员） ================= -->
+        <section class="view" id="view-dispatch">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <h3>调度模拟</h3>
+                <div class="actions slim">
+                  <button id="addDemoBtn" type="button">加入演示车辆</button>
+                  <button class="primary" id="dispatchBtn" type="button">执行调度</button>
+                  <button id="resetBtn" type="button">重置</button>
+                </div>
+              </div>
+              <div class="dispatch-lane" id="dispatchLane"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h3>事件日志</h3>
+                <button class="icon-button" id="clearLogBtn" type="button" title="清空日志" aria-label="清空日志">⌫</button>
+              </div>
+              <ol class="event-log" id="eventLog"></ol>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal hidden" id="ruleModal" role="dialog" aria-modal="true" aria-label="设置计费规则">
+      <div class="modal-card">
+        <div class="panel-head">
+          <h3>设置计费规则</h3>
+        </div>
+        <div class="form-grid">
+          <label>峰时电价（元/度）<input id="rulePeak" type="number" step="0.01" min="0" /></label>
+          <label>平时电价（元/度）<input id="ruleNormal" type="number" step="0.01" min="0" /></label>
+          <label>谷时电价（元/度）<input id="ruleValley" type="number" step="0.01" min="0" /></label>
+          <label>服务费（元/度）<input id="ruleService" type="number" step="0.01" min="0" /></label>
+        </div>
+        <div class="actions">
+          <button class="primary" id="ruleSaveBtn" type="button">保存</button>
+          <button id="ruleCancelBtn" type="button">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

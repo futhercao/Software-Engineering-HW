@@ -1,0 +1,36 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title recoverPile(pile_Id) — 充电中故障恢复
+
+actor "管理员" as A
+boundary "故障处理界面" as UI
+control "FaultDispatchController" as C
+control "FaultRecoveryService" as F
+control "DispatchService" as D
+entity "ChargingPile" as P
+A -> UI: 故障桩恢复
+UI -> C: recoverPile(pile_Id)
+C -> F: recover_pile(payload)
+F -> P: state = WORKING
+F -> D: collect_queued_by_mode(mode) 收集同类型未充电车辆
+F -> D: 按排队号 redispatch_specific(纳入恢复后的桩)
+F -> D: dispatch_waiting(mode) 恢复叫号
+F --> C: Return(1)
+C --> UI: Return(0/1)
+@enduml

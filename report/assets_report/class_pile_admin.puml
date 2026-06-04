@@ -1,0 +1,70 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_05 运行充电桩 — 静态类图
+
+package "控制器层" {
+  class PileAdminController {
+    +powerOn(payload) : dict
+    +powerOff(payload) : dict
+    +Start_ChargingPile(payload) : dict
+    +setParameters(payload) : dict
+  }
+}
+package "业务层" {
+  class PileService {
+    +set_power(payload) : dict
+    +start_pile(payload) : dict
+    +power_off(payload) : dict
+    +set_parameters(payload) : dict
+  }
+  class DispatchService {
+    +dispatch_waiting(mode) : void
+    +redispatch_specific(reqs) : void
+  }
+}
+package "领域层" {
+  class ChargingPile {
+    -id : str
+    -state : str
+    -queue : list
+    +load() : int
+  }
+  class ChargingRule {
+    -peak/normal/valley : float
+    -service : float
+  }
+}
+package "持久化层" {
+  class PileRepository {
+    +get(id) : ChargingPile
+    +by_mode(mode) : list
+  }
+  class RuleRepository {
+    +get() : ChargingRule
+    +set(rule) : void
+  }
+}
+PileAdminController --> PileService
+PileService --> DispatchService
+PileService --> ChargingPile
+PileService --> ChargingRule
+PileService ..> PileRepository
+PileService ..> RuleRepository
+@enduml

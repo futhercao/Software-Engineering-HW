@@ -1,0 +1,190 @@
+{
+  "clock": 585,
+  "seq": {
+    "request": 3,
+    "detail": 2,
+    "ticketFAST": 3,
+    "ticketTRICKLE": 1
+  },
+  "logs": [
+    "2026-06-03 09:45  用户 京A-88888 登录",
+    "2026-06-03 09:45  用户 京A-88888 登录",
+    "2026-06-03 09:45  管理员 admin 登录",
+    "2026-06-03 09:45  F2 进入 F1 队列",
+    "2026-06-03 09:45  提交快充申请，排队号 F2",
+    "2026-06-03 09:45  用户 京A-88888 登录",
+    "2026-06-03 09:45  用户 京A-88888 登录",
+    "2026-06-03 09:40  F1 结束充电，生成详单 DL-0001",
+    "2026-06-03 08:30  账户 京A-88888 验证通过",
+    "2026-06-03 08:30  账户 京A-88888 验证通过",
+    "2026-06-03 08:30  管理员 admin 登录",
+    "2026-06-03 08:15  营业员 op001 登录",
+    "2026-06-03 08:00  F1 在 F1 开始充电",
+    "2026-06-03 08:00  F1 进入 F1 队列",
+    "2026-06-03 08:00  提交快充申请，排队号 F1",
+    "2026-06-03 08:00  用户 京A-88888 登录"
+  ],
+  "rule": {
+    "peak": 1.0,
+    "normal": 0.7,
+    "valley": 0.4,
+    "service": 0.8,
+    "waitingAreaSize": 8,
+    "chargingQueueLen": 3,
+    "fastPileNum": 2,
+    "tricklePileNum": 3,
+    "fastPower": 30.0,
+    "tricklePower": 10.0
+  },
+  "accounts": {
+    "京A-88888": {
+      "carId": "京A-88888",
+      "userName": "演示用户",
+      "capacity": 60.0,
+      "active": true,
+      "credential": {
+        "salt": "ca4165799ff34877880cd5c2c7f7c298",
+        "hash": "fe32b8c6c00a2e4f6365ea4ef71494ffe7b595a4662f11d9811e21253d2e9b92"
+      }
+    }
+  },
+  "requests": [
+    {
+      "id": "REQ-0001",
+      "carId": "京A-88888",
+      "capacity": 60.0,
+      "amount": 50.0,
+      "mode": "FAST",
+      "ticket": "F1",
+      "state": "ENDED",
+      "createdAt": 480,
+      "pileId": "F1",
+      "priority": false,
+      "session": {
+        "pileId": "F1",
+        "start": 480,
+        "duration": 100,
+        "remainingMinutes": 0,
+        "charged": 50.0,
+        "end": 580
+      }
+    },
+    {
+      "id": "REQ-0002",
+      "carId": "京A-88888",
+      "capacity": 60.0,
+      "amount": 60.0,
+      "mode": "FAST",
+      "ticket": "F2",
+      "state": "CHARGING_AREA",
+      "createdAt": 585,
+      "pileId": "F1",
+      "priority": false,
+      "session": null
+    }
+  ],
+  "piles": [
+    {
+      "id": "F1",
+      "mode": "FAST",
+      "power": 30.0,
+      "state": "WORKING",
+      "queue": [
+        "REQ-0002"
+      ],
+      "activeRequestId": null,
+      "totalChargeNum": 1,
+      "totalChargeTime": 100,
+      "totalCapacity": 50.0,
+      "totalChargeFee": 35.0,
+      "totalServiceFee": 40.0,
+      "totalFee": 75.0
+    },
+    {
+      "id": "F2",
+      "mode": "FAST",
+      "power": 30.0,
+      "state": "WORKING",
+      "queue": [],
+      "activeRequestId": null,
+      "totalChargeNum": 0,
+      "totalChargeTime": 0,
+      "totalCapacity": 0.0,
+      "totalChargeFee": 0.0,
+      "totalServiceFee": 0.0,
+      "totalFee": 0.0
+    },
+    {
+      "id": "T1",
+      "mode": "TRICKLE",
+      "power": 10.0,
+      "state": "WORKING",
+      "queue": [],
+      "activeRequestId": null,
+      "totalChargeNum": 0,
+      "totalChargeTime": 0,
+      "totalCapacity": 0.0,
+      "totalChargeFee": 0.0,
+      "totalServiceFee": 0.0,
+      "totalFee": 0.0
+    },
+    {
+      "id": "T2",
+      "mode": "TRICKLE",
+      "power": 10.0,
+      "state": "WORKING",
+      "queue": [],
+      "activeRequestId": null,
+      "totalChargeNum": 0,
+      "totalChargeTime": 0,
+      "totalCapacity": 0.0,
+      "totalChargeFee": 0.0,
+      "totalServiceFee": 0.0,
+      "totalFee": 0.0
+    },
+    {
+      "id": "T3",
+      "mode": "TRICKLE",
+      "power": 10.0,
+      "state": "WORKING",
+      "queue": [],
+      "activeRequestId": null,
+      "totalChargeNum": 0,
+      "totalChargeTime": 0,
+      "totalCapacity": 0.0,
+      "totalChargeFee": 0.0,
+      "totalServiceFee": 0.0,
+      "totalFee": 0.0
+    }
+  ],
+  "bills": [
+    {
+      "billId": "BILL-2026-06-03-京A-88888",
+      "carId": "京A-88888",
+      "date": "2026-06-03",
+      "chargeAmount": 50.0,
+      "chargeDuration": 100,
+      "chargeFee": 35.0,
+      "serviceFee": 40.0,
+      "totalFee": 75.0
+    }
+  ],
+  "details": [
+    {
+      "detailId": "DL-0001",
+      "billId": "BILL-2026-06-03-京A-88888",
+      "carId": "京A-88888",
+      "date": "2026-06-03",
+      "pileId": "F1",
+      "chargeAmount": 50.0,
+      "chargeDuration": 100,
+      "startTime": "2026-06-03 08:00",
+      "endTime": "2026-06-03 09:40",
+      "chargeFee": 35.0,
+      "serviceFee": 40.0,
+      "totalFee": 75.0,
+      "generatedAt": "2026-06-03 09:40",
+      "reason": "达到请求电量"
+    }
+  ]
+}

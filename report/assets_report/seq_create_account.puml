@@ -1,0 +1,45 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title createNewAccount(car_Id, userName, car_Capacity)
+
+actor "用户" as A
+boundary "注册界面" as UI
+control "AccountController" as C
+control "AccountService" as S
+entity "UserAccount" as ACC
+entity "EVCar" as CAR
+database "AccountRepository" as R
+A -> UI: 输入车辆ID/用户名/电池容量
+UI -> C: createNewAccount(car_Id, userName, car_Capacity)
+C -> S: create_account(payload)
+S -> R: exists(car_Id)
+R --> S: true / false
+alt 数据合法且车辆未注册
+  create CAR
+  S -> CAR: <<create>> EVCar(car_Id, car_Capacity)
+  create ACC
+  S -> ACC: <<create>> UserAccount(car, userName)
+  S -> R: add(account)
+  S --> C: {result:1, account}
+else 数据非法或车辆重复
+  S --> C: ValueError
+end
+C --> UI: Return(0/1)
+UI --> A: 显示注册结果
+@enduml

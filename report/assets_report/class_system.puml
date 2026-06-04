@@ -1,0 +1,98 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title 系统级分层静态结构（汇总）
+
+package "控制器层" {
+  class AccountController
+  class ChargingRequestController
+  class BillingController
+  class PileAdminController
+  class MonitorController
+  class FaultDispatchController
+}
+package "业务层" {
+  class AccountService
+  class ChargingRequestService
+  class QueueService
+  class DispatchService
+  class ChargingService
+  class BillingService
+  class PricingService
+  class PileService
+  class PileMonitorService
+  class FaultRecoveryService
+  abstract class FaultStrategy
+  class PriorityFaultStrategy
+  class TimeOrderFaultStrategy
+}
+package "领域层" {
+  class UserAccount
+  class EVCar
+  class ChargingRequest
+  class QueueTicket
+  class ChargeSession
+  class ChargingPile
+  class ChargingRule
+  class Bill
+  class DetailedList
+}
+package "持久化层" {
+  class AccountRepository
+  class RequestRepository
+  class PileRepository
+  class BillRepository
+  class DetailedListRepository
+  class RuleRepository
+}
+AccountController --> AccountService
+ChargingRequestController --> ChargingRequestService
+ChargingRequestService --> ChargingService
+BillingController --> BillingService
+PileAdminController --> PileService
+MonitorController --> PileMonitorService
+FaultDispatchController --> FaultRecoveryService
+FaultDispatchController --> DispatchService
+ChargingRequestService --> QueueService
+ChargingRequestService --> DispatchService
+ChargingService --> BillingService
+ChargingService --> PricingService
+FaultRecoveryService --> DispatchService
+FaultRecoveryService --> ChargingService
+PriorityFaultStrategy --|> FaultStrategy
+TimeOrderFaultStrategy --|> FaultStrategy
+FaultRecoveryService --> FaultStrategy
+PileService --> DispatchService
+PileMonitorService --> QueueService
+AccountService --> UserAccount
+UserAccount --> EVCar
+ChargingRequestService --> ChargingRequest
+ChargingRequest --> QueueTicket
+DispatchService --> ChargingPile
+ChargingService --> ChargeSession
+BillingService --> Bill
+Bill --> DetailedList
+PricingService --> ChargingRule
+AccountService ..> AccountRepository
+ChargingRequestService ..> RequestRepository
+DispatchService ..> PileRepository
+BillingService ..> BillRepository
+BillingService ..> DetailedListRepository
+PricingService ..> RuleRepository
+@enduml

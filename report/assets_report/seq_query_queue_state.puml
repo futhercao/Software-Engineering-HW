@@ -1,0 +1,33 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Query_QueueState(queuelist)
+
+actor "管理员" as A
+boundary "监控界面" as UI
+control "MonitorController" as C
+control "PileMonitorService" as S
+control "QueueService" as Q
+A -> UI: 查看各队列车辆信息
+UI -> C: Query_QueueState(queuelist)
+C -> S: query_queue_state()
+S -> Q: queue_rows()
+Q --> S: 各等候/排队/在充车辆行
+S --> C: Return(car_Id, car_Capacity, Request_Amount, waitTime)
+C --> UI: 展示队列车辆
+@enduml

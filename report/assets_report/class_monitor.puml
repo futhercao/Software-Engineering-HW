@@ -1,0 +1,65 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_06 / UC_07 状态与队列监控 — 静态类图
+
+package "控制器层" {
+  class MonitorController {
+    +Query_PileState(pile_id) : dict
+    +Query_QueueState() : dict
+  }
+}
+package "业务层" {
+  class PileMonitorService {
+    +query_pile_state(pile_id) : dict
+    +query_queue_state() : dict
+  }
+  class QueueService {
+    +queue_rows() : list
+    +waiting_count() : int
+  }
+}
+package "领域层" {
+  class ChargingPile {
+    -state : str
+    -totalChargeNum : int
+    -totalChargeTime : int
+    -totalCapacity : float
+  }
+  class ChargingRequest {
+    -carId : str
+    -capacity : float
+    -amount : float
+  }
+}
+package "持久化层" {
+  class PileRepository {
+    +all() : list
+  }
+  class RequestRepository {
+    +waiting(mode) : list
+  }
+}
+MonitorController --> PileMonitorService
+PileMonitorService --> QueueService
+PileMonitorService --> ChargingPile
+QueueService --> ChargingRequest
+PileMonitorService ..> PileRepository
+QueueService ..> RequestRepository
+@enduml

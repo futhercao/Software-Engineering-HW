@@ -1,0 +1,72 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam rectangle {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+skinparam database {
+  BackgroundColor #FFF6E5
+  BorderColor #C8881A
+}
+skinparam arrowColor #0B2545
+
+title 智能充电桩调度计费系统分层架构
+
+package "客户端层 (frontend：单一 IP + 登录区分角色)" {
+  [登录页 login.html\n/api/login 鉴权后进入对应角色] as LOGIN
+  [用户客户端\n注册/充电申请/查询/开始结束充电/账单/详单] as UC
+  [管理员客户端\n桩启停/监控/故障/报表] as AC
+}
+package "接口与控制器层 (core/controllers.py)" {
+  [AccountController] as C1
+  [ChargingRequestController] as C2
+  [BillingController] as C3
+  [PileAdminController] as C4
+  [MonitorController] as C5
+  [FaultDispatchController] as C6
+}
+package "业务/应用层 (core/services.py)" {
+  [Account / ChargingRequest / Queue\nDispatch / Charging / Pricing\nBilling / PileService / PileMonitor\nFaultRecovery Service] as SVC
+  [FaultStrategy 策略族\nPriority / TimeOrder] as STRAT
+}
+package "领域层 (core/domain.py)" {
+  [UserAccount / EVCar / ChargingRequest\nQueueTicket / ChargeSession / ChargingPile\nChargingRule / Bill / DetailedList] as DOM
+}
+package "持久化层 (core/repositories.py)" {
+  [Account/Request/Pile/Bill\nDetailedList/Rule Repository] as REPO
+}
+database "state.json\n(JSON 状态快照)" as DB
+[支撑设施 Clock / Sequencer / EventLog\n(core/support.py)] as SUP
+[应用门面 ChargingStationSystem\n装配各层 + 线程锁 (core/system.py)] as FACADE
+
+LOGIN ..> FACADE
+UC --> C1
+UC --> C2
+UC --> C3
+AC --> C4
+AC --> C5
+AC --> C6
+C1 --> SVC
+C2 --> SVC
+C3 --> SVC
+C4 --> SVC
+C5 --> SVC
+C6 --> SVC
+SVC --> STRAT
+SVC --> DOM
+SVC ..> REPO
+REPO --> DB
+SVC ..> SUP
+FACADE ..> C1
+FACADE ..> SVC
+FACADE ..> REPO
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title dispatchWhenMultipleSlots(mode) — 单次调度总时长最短 [Bonus]
+
+actor "管理员" as A
+boundary "调度模拟界面" as UI
+control "FaultDispatchController" as C
+control "DispatchService" as D
+entity "ChargingPile" as P
+A -> UI: 充电区出现多个空位，一次叫多号
+UI -> C: dispatchWhenMultipleSlots(mode)
+C -> D: dispatch_when_multiple_slots(mode)
+D -> D: _free_slots(mode) 计算空位数 k
+D -> D: 取等候区前 k 辆同模式车
+D -> D: _optimal_assignment 枚举使完成总时长最短的组合
+D -> P: 按最优组合分别入队
+D --> C: {dispatched, totalFinishMinutes}
+C --> UI: 展示一次多车调度结果
+@enduml

@@ -1,0 +1,74 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FAFBFD
+  BorderColor #2E74B5
+  ArrowColor #0B2545
+  FontColor #0B2545
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #B8C4D1
+}
+
+title UC_08 故障调度与恢复 — 静态类图（策略模式）
+
+package "控制器层" {
+  class FaultDispatchController {
+    +handlePileFault(payload) : dict
+    +recoverPile(payload) : dict
+    +dispatchWhenMultipleSlots(payload) : dict
+    +batchDispatchWhenFull(payload) : dict
+  }
+}
+package "业务层" {
+  class FaultRecoveryService {
+    +handle_pile_fault(payload) : dict
+    +recover_pile(payload) : dict
+  }
+  abstract class FaultStrategy {
+    +redispatch(pile, stranded, dispatch) : void
+  }
+  class PriorityFaultStrategy {
+    +redispatch(pile, stranded, dispatch) : void
+  }
+  class TimeOrderFaultStrategy {
+    +redispatch(pile, stranded, dispatch) : void
+  }
+  class DispatchService {
+    +redispatch_specific(reqs, exclude) : void
+    +collect_queued_by_mode(mode) : list
+    +dispatch_waiting(mode) : void
+  }
+  class ChargingService {
+    +end_charging(req, skip_dispatch) : dict
+  }
+}
+package "领域层" {
+  class ChargingPile {
+    -state : str
+    -queue : list
+    +load() : int
+  }
+}
+package "持久化层" {
+  class PileRepository
+  class RequestRepository
+}
+FaultDispatchController --> FaultRecoveryService
+FaultDispatchController --> DispatchService
+PriorityFaultStrategy --|> FaultStrategy
+TimeOrderFaultStrategy --|> FaultStrategy
+FaultRecoveryService --> FaultStrategy
+FaultRecoveryService --> DispatchService
+FaultRecoveryService --> ChargingService
+FaultRecoveryService --> ChargingPile
+FaultRecoveryService ..> PileRepository
+FaultRecoveryService ..> RequestRepository
+@enduml

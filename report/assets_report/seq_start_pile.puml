@@ -1,0 +1,34 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title Start_ChargingPile(pile_Id)
+
+actor "管理员" as A
+boundary "充电桩管理界面" as UI
+control "PileAdminController" as C
+control "PileService" as S
+control "DispatchService" as D
+entity "ChargingPile" as P
+A -> UI: 投入运行充电桩
+UI -> C: Start_ChargingPile(pile_Id)
+C -> S: start_pile(payload)
+S -> P: state = WORKING
+S -> D: dispatch_waiting(mode)  (有等候车辆则叫号入桩)
+S --> C: Return(1)
+C --> UI: Return(0/1)
+@enduml

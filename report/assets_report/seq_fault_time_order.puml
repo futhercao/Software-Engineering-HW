@@ -1,0 +1,41 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title handlePileFault(pile_Id, TIME_ORDER) — 时间顺序调度
+
+actor "管理员" as A
+boundary "故障处理界面" as UI
+control "FaultDispatchController" as C
+control "FaultRecoveryService" as F
+control "ChargingService" as CHG
+control "TimeOrderFaultStrategy" as TS
+control "DispatchService" as D
+A -> UI: 标记故障并选择时间顺序调度
+UI -> C: handlePileFault(pile_Id, TIME_ORDER)
+C -> F: handle_pile_fault(payload)
+alt 故障桩正在充电
+  F -> CHG: end_charging(active, 停止计费, skip_dispatch)
+end
+F -> TS: redispatch(pile, stranded, DispatchService)
+TS -> D: collect_queued_by_mode(mode)  收集同类型其它桩未充电车辆
+TS -> TS: 与故障队列合并并按排队号排序
+TS -> D: redispatch_specific(按号最短完成时长重排)
+F -> D: dispatch_waiting(mode) 恢复等候区叫号
+F --> C: Return(1)
+C --> UI: Return(0/1)
+@enduml

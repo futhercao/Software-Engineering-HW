@@ -1,0 +1,35 @@
+@startuml
+skinparam dpi 170
+skinparam backgroundColor white
+skinparam defaultFontName "Microsoft YaHei"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam maxMessageSize 200
+skinparam sequence {
+  ArrowColor #2E74B5
+  ActorBorderColor #0B2545
+  LifeLineBorderColor #B8C4D1
+  LifeLineBackgroundColor #F7F9FC
+  ParticipantBorderColor #2E74B5
+  ParticipantBackgroundColor #E8EEF5
+  ParticipantFontColor #0B2545
+}
+hide footbox
+
+title powerOff(pile_Id)
+
+actor "管理员" as A
+boundary "充电桩管理界面" as UI
+control "PileAdminController" as C
+control "PileService" as S
+control "DispatchService" as D
+entity "ChargingPile" as P
+A -> UI: 关闭充电桩
+UI -> C: powerOff(pile_Id)
+C -> S: power_off(payload)
+S -> P: 校验无在充车辆
+S -> P: 队列车辆退回等候区(priority); state = OFF
+S -> D: redispatch_specific(stranded) + dispatch_waiting(mode)
+S --> C: Return(1)
+C --> UI: Return(0/1)
+@enduml
